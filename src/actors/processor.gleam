@@ -1,13 +1,11 @@
 /// screw this lets just make it simple
 import gleam/list
+import gleam/option.{None, Some}
 import gleam/string
 import record.{type Record}
-import gleam/option.{Some, None}
-
 
 /// A stage is used to process a record through a series of handlers
 /// It will almost always be deployed as an actor or multiple actors
-
 pub type Processor {
   RecordProcessor(fn(Record) -> Result(Record, ProcessorError))
 }
@@ -17,20 +15,18 @@ pub type ProcessorError {
   KeyNotFound
 }
 
-pub fn from_function(f: fn(Record) -> Result(Record, ProcessorError)) -> Processor {
+pub fn from_function(
+  f: fn(Record) -> Result(Record, ProcessorError),
+) -> Processor {
   RecordProcessor(f)
 }
 
 pub fn identity() -> Processor {
-  RecordProcessor(fn(rec) {
-    Ok(rec)
-  })
+  RecordProcessor(fn(rec) { Ok(rec) })
 }
 
 pub fn count_num_a_processor(key: String, field_name: String) -> Processor {
-  RecordProcessor(fn(rec) {
-    count_num_a(rec, key, field_name)
-  })
+  RecordProcessor(fn(rec) { count_num_a(rec, key, field_name) })
 }
 
 fn count_num_a(

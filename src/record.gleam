@@ -1,3 +1,4 @@
+import birl
 import gleam/dict
 import gleam/option.{type Option, None, Some}
 
@@ -6,6 +7,7 @@ pub type Value {
   DString(String)
   DFloat(Float)
   DBool(Bool)
+  DTime(birl.Time)
   DMap(dict.Dict(String, Value))
   DList(List(Value))
 }

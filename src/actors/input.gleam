@@ -5,6 +5,7 @@ import gleam/list
 import gleam/otp/actor
 import gleam/string
 import record
+import string_utils
 
 pub type State {
   State(wait_time: RandomWait, recipient: process.Subject(record.Record))
@@ -37,7 +38,7 @@ pub fn start_random_generator(
   let loop = fn(msg, subject) {
     case msg {
       Generate -> {
-        let random_str = get_random_string()
+        let random_str = string_utils.get_random_string()
         process.send(
           recipient,
           Ok(record.from_value("random_string", record.DString(random_str))),
@@ -58,14 +59,4 @@ fn enqueue_generate(subject, wait_time: RandomWait) {
     Function(f) -> f()
   }
   process.send_after(subject, wait_time, Generate)
-}
-
-fn get_random_string() -> String {
-  let random_str_len: Int = int.random(10) + 5
-
-  let alphabet =
-    string.to_graphemes("abcdefghijklmnopqrstuvwxyz")
-    |> list.shuffle
-    |> string.join("")
-  string.slice(alphabet, 0, random_str_len)
 }
