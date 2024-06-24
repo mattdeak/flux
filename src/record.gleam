@@ -1,5 +1,5 @@
 import gleam/dict
-import gleam/option.{Some, None, type Option}
+import gleam/option.{type Option, None, Some}
 
 pub type Value {
   DInt(Int)
@@ -10,11 +10,9 @@ pub type Value {
   DList(List(Value))
 }
 
-
 pub type Record {
-    Record(record: dict.Dict(String, Value))
+  Record(record: dict.Dict(String, Value))
 }
-
 
 pub fn from_value(name: String, value: Value) -> Record {
   Record(dict.new() |> dict.insert(name, value))

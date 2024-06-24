@@ -1,24 +1,34 @@
+import actors/input
+import actors/processor
+import actors/stage
 import gleam/erlang/process
 import gleam/io
 import gleam/otp/actor
-import input
 import record
-import processor
 
 pub fn main() {
-  let assert Ok(recipient) = actor.start(Nil, handle_recipient)
+  // The backwards construction feels a little weird to me
+  let assert Ok(sink) = actor.start(Nil, handle_recipient)
+
+  let stage1 =
+    stage.new([])
+    |> stage.add_processor(processor.identity())
+    |> stage.add_processor(processor.count_num_a_processor(
+      "random_string",
+      "a_count",
+    ))
+  let assert Ok(stage1_actor) = stage.as_actor(stage1, sink)
+
   let assert Ok(_) =
-    input.start_random_generator(input.Constant(1000), recipient)
+    input.start_random_generator(input.Constant(1000), stage1_actor)
 
   process.sleep_forever()
 }
 
 fn handle_recipient(
-  msg: record.Record,
+  msg: Result(record.Record, processor.ProcessorError),
   state: Nil,
-) -> actor.Next(record.Record, Nil) {
-  let assert Ok(new_record) = msg |> processor.identity |> processor.count_num_a(_, "random_string","a_count")
-
-  io.debug(new_record)
+) -> actor.Next(Result(record.Record, processor.ProcessorError), Nil) {
+  io.debug(msg)
   actor.continue(state)
 }

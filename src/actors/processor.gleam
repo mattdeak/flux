@@ -4,18 +4,36 @@ import gleam/string
 import record.{type Record}
 import gleam/option.{Some, None}
 
-pub type ProcessorHandler(state) = fn(Record, state) -> Result(Record, ProcessorError)
+
+/// A stage is used to process a record through a series of handlers
+/// It will almost always be deployed as an actor or multiple actors
+
+pub type Processor {
+  RecordProcessor(fn(Record) -> Result(Record, ProcessorError))
+}
 
 pub type ProcessorError {
   TypeMismatch
   KeyNotFound
 }
 
-pub fn identity(record: Record) -> Record {
-  record
+pub fn from_function(f: fn(Record) -> Result(Record, ProcessorError)) -> Processor {
+  RecordProcessor(f)
 }
 
-pub fn count_num_a(
+pub fn identity() -> Processor {
+  RecordProcessor(fn(rec) {
+    Ok(rec)
+  })
+}
+
+pub fn count_num_a_processor(key: String, field_name: String) -> Processor {
+  RecordProcessor(fn(rec) {
+    count_num_a(rec, key, field_name)
+  })
+}
+
+fn count_num_a(
   rec: Record,
   key: String,
   field_name: String,

@@ -1,3 +1,4 @@
+import actors/message
 import gleam/erlang/process
 import gleam/int
 import gleam/list
@@ -19,10 +20,9 @@ pub type RandomWait {
   Function(fn() -> Int)
 }
 
-
 pub fn start_random_generator(
   wait_time: RandomWait,
-  recipient: process.Subject(record.Record),
+  recipient: process.Subject(message.Message),
 ) -> Result(process.Subject(Message), actor.StartError) {
   let init = fn() {
     let subject = process.new_subject()
@@ -38,7 +38,10 @@ pub fn start_random_generator(
     case msg {
       Generate -> {
         let random_str = get_random_string()
-        process.send(recipient, record.from_value("random_string", record.DString(random_str)))
+        process.send(
+          recipient,
+          Ok(record.from_value("random_string", record.DString(random_str))),
+        )
         enqueue_generate(subject, wait_time)
         actor.continue(subject)
       }
