@@ -4,8 +4,8 @@ import gleam/int
 import gleam/iterator
 import gleam/result
 import gleam/string_builder
-import string_utils
 import record.{DInt, DString, DTime}
+import string_utils
 
 pub type HttpEvent {
   HttpEvent(

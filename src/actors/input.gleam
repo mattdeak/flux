@@ -5,6 +5,7 @@ import gleam/list
 import gleam/otp/actor
 import gleam/string
 import record
+import source
 import string_utils
 
 pub type State {
@@ -50,6 +51,31 @@ pub fn start_random_generator(
     }
   }
 
+  actor.start_spec(actor.Spec(init: init, loop: loop, init_timeout: 1000))
+}
+
+pub fn start_random_http_generator(
+  wait_time: RandomWait,
+  recipient: process.Subject(message.Message),
+) -> Result(process.Subject(Message), actor.StartError) {
+  let init = fn() {
+    let subject = process.new_subject()
+    let selector =
+      process.new_selector() |> process.selecting(subject, fn(msg) { msg })
+    process.send(subject, Generate)
+    actor.Ready(subject, selector)
+  }
+  let loop = fn(msg, subject) {
+    case msg {
+      Generate -> {
+        let random_event = source.random_event() |> source.to_record
+        process.send(recipient, Ok(random_event))
+        enqueue_generate(subject, wait_time)
+        actor.continue(subject)
+      }
+      Shutdown -> actor.Stop(process.Normal)
+    }
+  }
   actor.start_spec(actor.Spec(init: init, loop: loop, init_timeout: 1000))
 }
 

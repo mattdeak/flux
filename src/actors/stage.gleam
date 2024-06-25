@@ -1,6 +1,6 @@
 import actors/handler
 import actors/message.{type Message}
-import actors/processor
+import processors/processor
 import gleam/erlang/process
 import gleam/otp/actor
 import record
@@ -18,16 +18,40 @@ pub fn add_handler(stage: Stage, handler: handler.RecordHandler(Nil)) -> Stage {
   Stage([handler, ..stage.handlers])
 }
 
-pub fn add_processor(stage: Stage, processor: processor.Processor) -> Stage {
-  add_handler(stage, handler.from_processor(processor))
+pub fn add_processor(stage: Stage, proc: processor.Processor(Nil)) -> Stage {
+  add_handler(stage, handler.from_processor(proc))
 }
 
+/// This runs the stage as a single actor.
 pub fn as_actor(stage: Stage, sink: process.Subject(Message)) {
   actor.start(Nil, fn(msg: Message, _: Nil) {
     case msg {
       Error(error) -> process.send(sink, message.from_error(error))
       Ok(rec) -> {
         run_all_handlers(rec, stage.handlers) |> process.send(sink, _)
+      }
+    }
+
+    actor.continue(Nil)
+  })
+}
+
+/// This spawns an actor that spawns tasks for each record
+pub fn as_stage_runner(stage: Stage, sink: process.Subject(Message)) {
+  actor.start(Nil, fn(msg: Message, _: Nil) {
+    case msg {
+      Error(error) -> {
+        process.send(sink, message.from_error(error))
+        Nil
+      }
+      Ok(rec) -> {
+        process.start(
+          fn() {
+            run_all_handlers(rec, stage.handlers) |> process.send(sink, _)
+          },
+          linked: True,
+        )
+        Nil
       }
     }
 

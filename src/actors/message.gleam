@@ -1,4 +1,4 @@
-import actors/processor
+import processors/processor
 import record
 
 pub type Message =
