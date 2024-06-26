@@ -124,22 +124,6 @@ pub fn from_dict(dict: dict.Dict(String, Value)) -> Record {
   Record(dict)
 }
 
-pub fn from_dynamic(schema: Schema, dyn: dynamic.Dynamic) -> Record {
-  let record = new()
-
-  // We only accept dynamic records that are dictionaries
-  dict.each(schema, fn(name, value) {
-    let decoder = schema_value_to_decoder(value)
-
-    dynamic.field(name, decoder)
-  })
-
-  case decoded {
-    Ok(value) -> from_value(name, value)
-    Error(errors) -> from_value(name, value)
-  }
-}
-
 pub fn add_field(record: Record, name: String, value: Value) -> Record {
   Record(dict.insert(record.record, name, value))
 }
